@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8081" doc:name="HTTP Listener Configuration"/>
+    <http:request-config name="HTTP_Request_Configuration" protocol="HTTPS" host="reqres.in" port="443" doc:name="HTTP Request Configuration"/>
+    <flow name="my-rest-consumeFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/restConsume" doc:name="HTTP"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="api/users" method="GET" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-param paramName="page" value="2"/>
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="Transform Message" metadata:id="d4f31097-ff17-471b-9e75-2f4ce509c20b">
+            <dw:input-payload mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+---
+{
+	Personnel: {
+		(payload.data map ((datum , indexOfDatum) -> {
+			Employee: {
+				Name: datum.first_name,
+				Id: datum.id
+			}
+		}))
+	}
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+</mule>

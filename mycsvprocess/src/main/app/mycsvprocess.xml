@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8081" doc:name="HTTP Listener Configuration"/>
+    <flow name="mycsvprocessFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/csvToJson" allowedMethods="POST" doc:name="HTTP"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="b998e2a5-9931-4506-82fa-d8c6720598e0">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	groups: payload map
+	{
+		groupName : $.GroupName,
+		groupCode : $.Groupcode,
+        groupCategoryId : $.GroupCategoryID,
+        owner : $.GroupOwner
+		
+	}
+	
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <set-payload value="#[payload]" doc:name="Set Payload"/>
+        <set-property propertyName="Content-Type" value="application/json" mimeType="application/json" doc:name="Property"/>
+    </flow>
+</mule>
